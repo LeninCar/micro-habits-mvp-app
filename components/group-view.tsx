@@ -27,19 +27,21 @@ interface GroupViewProps {
   onToggleGroupHabit: (groupId: string, habitId: string) => void
 }
 
-type Member = { name: string; avatar: string; joinedAt: string; streak?: number; habits?: number }
+type Member = { name: string; avatar: string; joinedAt: string; streak?: number; habits?: number, habitsIds?: string[] }
 
 export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onToggleGroupHabit }: GroupViewProps) {
   const [showShareNotification, setShowShareNotification] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
 
-  
+   const [selectedHabit, setSelectedHabit] = useState<{ id: string; name: string } | null>(null)
 
   // NUEVO: usuario actual (puedes mapearlo a tu auth real)
+// 1) currentUser con hábitos que sigue (mock)
   const currentUser: Member = useMemo(
-    () => ({ name: "Tú", avatar: "🧑", joinedAt: new Date().toISOString() }),
+    () => ({ name: "Tú", avatar: "🧑", joinedAt: new Date().toISOString(), habitsIds: ["1", "2"] }),
     []
   )
+
 
   // NUEVO: guardamos cuándo te uniste (por grupo) para mostrar “se unió hace X”
   const [membershipMeta, setMembershipMeta] = useState<Record<string, { joinedAt: string }>>({})
@@ -91,16 +93,25 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
     if (selectedGroup && selectedGroup.id === group.id) {
       setSelectedGroup({ ...selectedGroup, isJoined: !isLeaving })
     }
+    if (isLeaving) setSelectedHabit(null)
   }
 
   const getGroupDetails = (group: Group) => {
-    // Members base (mock) con joinedAt ficticio
-    const baseMembers: Member[] = [
-      { name: "María", avatar: "👩", joinedAt: "2025-01-05T10:00:00Z", streak: 15, habits: 8 },
-      { name: "Carlos", avatar: "👨", joinedAt: "2025-01-08T14:00:00Z", streak: 12, habits: 6 },
-      { name: "Ana", avatar: "👧", joinedAt: "2025-01-12T09:30:00Z", streak: 10, habits: 7 },
-      { name: "Luis", avatar: "👦", joinedAt: "2025-01-15T12:00:00Z", streak: 8, habits: 5 },
+
+    const habits = [
+      { id: "1", name: "Meditar 5 minutos", category: "Bienestar", frequency: "Diario", icon: "🧘‍♀️", completedDates: ["2023-10-01"] },
+      { id: "2", name: "Leer 10 páginas", category: "Estudio", frequency: "Diario", icon: "📚", completedDates: ["2023-10-01"] },
+      { id: "3", name: "Ejercicio matutino", category: "Salud", frequency: "Diario", icon: "🏃‍♀️", completedDates: ["2023-10-01"] },
     ]
+    // Members base (mock) con joinedAt ficticio
+  // 1) baseMembers (mock) con habitsIds por cada miembro
+    const baseMembers: Member[] = [
+      { name: "María",  avatar: "👩", joinedAt: "2025-01-05T10:00:00Z", streak: 15, habits: 8, habitsIds: ["1", "2"] },
+      { name: "Carlos", avatar: "👨", joinedAt: "2025-01-08T14:00:00Z", streak: 12, habits: 6, habitsIds: ["2"] },
+      { name: "Ana",    avatar: "👧", joinedAt: "2025-01-12T09:30:00Z", streak: 10, habits: 7, habitsIds: ["1", "3"] },
+      { name: "Luis",   avatar: "👦", joinedAt: "2025-01-15T12:00:00Z", streak: 8, habits: 5, habitsIds: ["3"] },
+    ]
+
 
     // Si estás unido, te agregamos con tu fecha de unión (del meta si existe; si no, ahora)
     const joinedMeta = membershipMeta[group.id]
@@ -179,6 +190,16 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
   if (selectedGroup) {
     const details = getGroupDetails(selectedGroup)
     const today = new Date().toISOString().split("T")[0]
+
+    // separación de miembros según hábito seleccionado
+    const membersFollowing = selectedHabit
+      ? details.membersList.filter(m => (m.habitsIds ?? []).includes(selectedHabit.id))
+      : details.membersList
+
+    const membersNotFollowing = selectedHabit
+      ? details.membersList.filter(m => !(m.habitsIds ?? []).includes(selectedHabit.id))
+      : []
+
 
     return (
       <div className="max-w-md mx-auto px-4 py-6">
@@ -267,31 +288,101 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           </div>
         </div>
 
+        {/* Si hay filtro, muestra encabezado y lista de quienes siguen el hábito */}
+        {selectedHabit && (
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            También siguen “{selectedHabit.name}” ({membersFollowing.length})
+          </p>
+        )}
+        <div className="space-y-3">
+          {membersFollowing.map((m, idx) => (
+            <Card key={`in-${idx}`} className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{m.avatar}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-foreground">{m.name}</span>
+                    {m.name === "Tú" && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">tú</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Si hay filtro, muestra los que NO siguen */}
+        {selectedHabit && (
+          <>
+            <p className="text-xs font-medium text-muted-foreground mt-5 mb-2">
+              No siguen “{selectedHabit.name}” ({membersNotFollowing.length})
+            </p>
+            <div className="space-y-3">
+              {membersNotFollowing.map((m, idx) => (
+                <Card key={`out-${idx}`} className="p-4 opacity-90">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">{m.avatar}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-foreground">{m.name}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Target className="h-6 w-6 text-primary" />
             Hábitos Compartidos
           </h2>
+
           {details.habits && details.habits.length > 0 ? (
             <div className="space-y-3">
               {details.habits.map((habit) => {
                 const isCompleted = habit.completedDates.includes(today)
+                const isSelected = selectedHabit?.id === habit.id
+
                 return (
                   <Card
                     key={habit.id}
-                    className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                      isCompleted ? "bg-success/5 border-success/30" : "bg-card"
-                    }`}
-                    onClick={() => onToggleGroupHabit(details.id, habit.id)}
+                    className={`p-4 cursor-pointer transition-all hover:shadow-md border
+                      ${
+                        isSelected
+                          ? "bg-success/10 border-success/40 ring-2 ring-success" // seleccionado
+                          : isCompleted
+                            ? "bg-success/5 border-success/30"                    // completado hoy
+                            : "bg-card"                                           // default
+                      }`}
+                    onClick={() => {
+                      onToggleGroupHabit(details.id, habit.id)
+                      setSelectedHabit((prev) =>
+                        prev?.id === habit.id ? null : { id: habit.id, name: habit.name }
+                      )
+                    }}
+                    title={isSelected ? "Hábito seleccionado" : "Seleccionar este hábito"}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">{habit.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
+                          <h3
+                            className={`font-semibold ${
+                              isSelected ? "text-success" : isCompleted ? "text-success" : "text-foreground"
+                            }`}
+                          >
                             {habit.name}
                           </h3>
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              isSelected ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            }`}
+                          >
                             {habit.category}
                           </span>
                         </div>
@@ -299,7 +390,9 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                           <span className="capitalize">{habit.frequency}</span>
                         </div>
                       </div>
-                      {isCompleted ? (
+
+                      {/* Ícono a la derecha: verde si está seleccionado o completado */}
+                      {isSelected || isCompleted ? (
                         <CheckCircle2 className="h-8 w-8 text-success" />
                       ) : (
                         <Circle className="h-8 w-8 text-muted-foreground" />
@@ -316,6 +409,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             </Card>
           )}
         </div>
+
 
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
