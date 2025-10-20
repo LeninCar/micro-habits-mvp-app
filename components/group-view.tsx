@@ -18,7 +18,7 @@ import {
   Circle,
 } from "lucide-react"
 import type { Group } from "@/app/page"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 interface GroupViewProps {
   groups: Group[]
@@ -27,9 +27,46 @@ interface GroupViewProps {
   onToggleGroupHabit: (groupId: string, habitId: string) => void
 }
 
+type Member = { name: string; avatar: string; joinedAt: string; streak?: number; habits?: number }
+
 export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onToggleGroupHabit }: GroupViewProps) {
   const [showShareNotification, setShowShareNotification] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
+
+  
+
+  // NUEVO: usuario actual (puedes mapearlo a tu auth real)
+  const currentUser: Member = useMemo(
+    () => ({ name: "Tú", avatar: "🧑", joinedAt: new Date().toISOString() }),
+    []
+  )
+
+  // NUEVO: guardamos cuándo te uniste (por grupo) para mostrar “se unió hace X”
+  const [membershipMeta, setMembershipMeta] = useState<Record<string, { joinedAt: string }>>({})
+
+  // Helper: “hace 2 semanas”, “hace 3 días”, etc.
+  const relativeTime = (iso: string) => {
+    const rtf = new Intl.RelativeTimeFormat("es-CO", { numeric: "auto" })
+    const now = Date.now()
+    const t = new Date(iso).getTime()
+    const diffSec = Math.round((t - now) / 1000)
+    const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+      ["year", 60 * 60 * 24 * 365],
+      ["month", 60 * 60 * 24 * 30],
+      ["week", 60 * 60 * 24 * 7],
+      ["day", 60 * 60 * 24],
+      ["hour", 60 * 60],
+      ["minute", 60],
+      ["second", 1],
+    ]
+    for (const [unit, secondsInUnit] of units) {
+      if (Math.abs(diffSec) >= secondsInUnit || unit === "second") {
+        const value = Math.round(diffSec / secondsInUnit)
+        return rtf.format(value, unit)
+      }
+    }
+    return "hace un momento"
+  }
 
   const mockActivity = [
     { user: "María", habit: "Meditar 5 minutos", time: "hace 10 min", avatar: "👩" },
@@ -37,49 +74,82 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
     { user: "Ana", habit: "Ejercicio matutino", time: "hace 1 hora", avatar: "👧" },
   ]
 
-  const getGroupDetails = (group: Group) => ({
-    ...group,
-    createdDate: "15 de Enero, 2025",
-    habits: [
-      {
-        id: "1",
-        name: "Meditar 5 minutos",
-        category: "Bienestar",
-        frequency: "Diario",
-        icon: "🧘‍♀️",
-        completedDates: ["2023-10-01"],
-      },
-      {
-        id: "2",
-        name: "Leer 10 páginas",
-        category: "Estudio",
-        frequency: "Diario",
-        icon: "📚",
-        completedDates: ["2023-10-01"],
-      },
-      {
-        id: "3",
-        name: "Ejercicio matutino",
-        category: "Salud",
-        frequency: "Diario",
-        icon: "🏃‍♀️",
-        completedDates: ["2023-10-01"],
-      },
-    ],
-    topMembers: [
-      { name: "María", avatar: "👩", streak: 15, habits: 8 },
-      { name: "Carlos", avatar: "👨", streak: 12, habits: 6 },
-      { name: "Ana", avatar: "👧", streak: 10, habits: 7 },
-      { name: "Luis", avatar: "👦", streak: 8, habits: 5 },
-    ],
-    recentActivity: [
-      { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
-      { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
-      { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
-      { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
-    ],
-    weeklyProgress: 78,
-  })
+  // ENVOLTORIO: une/sale y actualiza joinedAt localmente
+  const handleToggleGroupMembership = (group: Group) => {
+    const isLeaving = !!group.isJoined
+    onToggleGroupMembership(group.id)
+    setMembershipMeta((prev) => {
+      const next = { ...prev }
+      if (isLeaving) {
+        delete next[group.id]
+      } else {
+        next[group.id] = { joinedAt: new Date().toISOString() }
+      }
+      return next
+    })
+    // Si estás en la vista de detalles, refleja el cambio sin esperar al padre
+    if (selectedGroup && selectedGroup.id === group.id) {
+      setSelectedGroup({ ...selectedGroup, isJoined: !isLeaving })
+    }
+  }
+
+  const getGroupDetails = (group: Group) => {
+    // Members base (mock) con joinedAt ficticio
+    const baseMembers: Member[] = [
+      { name: "María", avatar: "👩", joinedAt: "2025-01-05T10:00:00Z", streak: 15, habits: 8 },
+      { name: "Carlos", avatar: "👨", joinedAt: "2025-01-08T14:00:00Z", streak: 12, habits: 6 },
+      { name: "Ana", avatar: "👧", joinedAt: "2025-01-12T09:30:00Z", streak: 10, habits: 7 },
+      { name: "Luis", avatar: "👦", joinedAt: "2025-01-15T12:00:00Z", streak: 8, habits: 5 },
+    ]
+
+    // Si estás unido, te agregamos con tu fecha de unión (del meta si existe; si no, ahora)
+    const joinedMeta = membershipMeta[group.id]
+    const youJoinedAt = joinedMeta?.joinedAt ?? currentUser.joinedAt
+
+    const membersList: Member[] = group.isJoined
+      ? [{ ...currentUser, joinedAt: youJoinedAt }, ...baseMembers]
+      : baseMembers
+
+    return {
+      ...group,
+      createdDate: "15 de Enero, 2025",
+      membersList,
+      membersCount: membersList.length,
+      habits: [
+        {
+          id: "1",
+          name: "Meditar 5 minutos",
+          category: "Bienestar",
+          frequency: "Diario",
+          icon: "🧘‍♀️",
+          completedDates: ["2023-10-01"],
+        },
+        {
+          id: "2",
+          name: "Leer 10 páginas",
+          category: "Estudio",
+          frequency: "Diario",
+          icon: "📚",
+          completedDates: ["2023-10-01"],
+        },
+        {
+          id: "3",
+          name: "Ejercicio matutino",
+          category: "Salud",
+          frequency: "Diario",
+          icon: "🏃‍♀️",
+          completedDates: ["2023-10-01"],
+        },
+      ],
+      recentActivity: [
+        { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
+        { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
+        { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
+        { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
+      ],
+      weeklyProgress: 78,
+    }
+  }
 
   const joinedGroups = groups.filter((g) => g.isJoined)
   const availableGroups = groups.filter((g) => !g.isJoined)
@@ -131,7 +201,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
 
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{details.members}</div>
+                <div className="text-2xl font-bold text-primary">{details.membersList.length}</div>
                 <div className="text-xs text-muted-foreground">Miembros</div>
               </div>
               <div className="text-center">
@@ -160,7 +230,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
               {details.isJoined && (
                 <Button
                   onClick={() => {
-                    onToggleGroupMembership(details.id)
+                    handleToggleGroupMembership(details) // usa envoltorio
                     setSelectedGroup(null)
                   }}
                   variant="outline"
@@ -171,6 +241,30 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
               )}
             </div>
           </Card>
+        </div>
+
+        {/* NUEVO: Miembros del grupo */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
+            Miembros del grupo
+          </h2>
+          <div className="space-y-3">
+            {details.membersList.map((m, idx) => (
+              <Card key={idx} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{m.avatar}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">{m.name}</span>
+                      {m.name === "Tú" && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">tú</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="mb-6">
@@ -229,7 +323,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             Miembros Destacados
           </h2>
           <div className="space-y-3">
-            {details.topMembers.map((member, index) => (
+            {details.membersList.slice(0, 4).map((member, index) => (
               <Card key={index} className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">{member.avatar}</div>
@@ -239,8 +333,8 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                       {index === 0 && <span className="text-lg">🏆</span>}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>🔥 {member.streak} días</span>
-                      <span>✅ {member.habits} hábitos</span>
+                      {typeof member.streak === "number" && <span>🔥 {member.streak} días</span>}
+                      {typeof member.habits === "number" && <span>✅ {member.habits} hábitos</span>}
                     </div>
                   </div>
                 </div>
@@ -345,7 +439,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                   <Button
                     onClick={(e) => {
                       e.stopPropagation()
-                      onToggleGroupMembership(group.id)
+                      handleToggleGroupMembership(group) // usa envoltorio
                     }}
                     variant="outline"
                     className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/10"
@@ -402,7 +496,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                 <Button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onToggleGroupMembership(group.id)
+                    handleToggleGroupMembership(group) // usa envoltorio
                   }}
                   className="w-full bg-primary hover:bg-primary-hover text-white"
                 >
