@@ -1,10 +1,10 @@
 "use client"
 
-import { Home, Flame, Users, Heart } from "lucide-react"
+import { Home, Flame, Users, Heart, UserCircle } from "lucide-react"
 
 interface BottomNavProps {
-  currentView: "dashboard" | "streak" | "group" | "break"
-  onViewChange: (view: "dashboard" | "streak" | "group" | "break") => void
+  currentView: "dashboard" | "streak" | "group" | "break" | "profile"
+  onViewChange: (view: "dashboard" | "streak" | "group" | "break" | "profile") => void
 }
 
 export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
@@ -13,6 +13,7 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
     { id: "streak" as const, icon: Flame, label: "Progreso" },
     { id: "group" as const, icon: Users, label: "Comunidad" },
     { id: "break" as const, icon: Heart, label: "Pausa" },
+    { id: "profile" as const, icon: UserCircle, label: "Perfil" },
   ]
 
   return (
