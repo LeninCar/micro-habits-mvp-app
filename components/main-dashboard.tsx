@@ -1,0 +1,177 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Plus, CheckCircle2, Circle, Filter, MoreVertical, Bell } from "lucide-react"
+import type { Habit } from "@/app/page"
+
+interface MainDashboardProps {
+  habits: Habit[]
+  onToggleHabit: (habitId: string) => void
+  onAddHabit: () => void
+  onEditHabit: (habit: Habit) => void
+}
+
+export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }: MainDashboardProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("todas")
+
+  const today = new Date().toISOString().split("T")[0]
+
+  const filteredHabits = selectedCategory === "todas" ? habits : habits.filter((h) => h.category === selectedCategory)
+
+  const completedToday = filteredHabits.filter((h) => h.completedDates.includes(today)).length
+  const totalHabits = filteredHabits.length
+  const progressPercentage = totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0
+
+  const categories = [
+    { value: "todas", label: "Todas", icon: "🌟" },
+    { value: "salud", label: "Salud", icon: "💪" },
+    { value: "estudio", label: "Estudio", icon: "📚" },
+    { value: "descanso", label: "Descanso", icon: "😴" },
+    { value: "finanzas", label: "Finanzas", icon: "💰" },
+    { value: "bienestar", label: "Bienestar", icon: "🧘" },
+  ]
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">MicroHabits</h1>
+        <p className="text-muted-foreground text-sm">Un paso pequeño hoy, un gran cambio mañana</p>
+      </div>
+
+      {/* Progress Overview */}
+      <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-none">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-foreground">Progreso de Hoy</h2>
+          <span className="text-2xl font-bold text-primary">
+            {completedToday}/{totalHabits}
+          </span>
+        </div>
+        <Progress value={progressPercentage} className="h-3 mb-2" />
+        <p className="text-sm text-muted-foreground">
+          {completedToday === totalHabits && totalHabits > 0
+            ? "¡Increíble! Completaste todos tus hábitos 🎉"
+            : `${totalHabits - completedToday} hábitos por completar`}
+        </p>
+      </Card>
+
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-semibold text-foreground">Filtrar por categoría</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                selectedCategory === cat.value
+                  ? "bg-primary text-white"
+                  : "bg-surface-secondary text-muted-foreground hover:bg-surface-secondary/80"
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span className="text-sm font-medium">{cat.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Habits List */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">Mis Micro-Hábitos</h2>
+          <Button onClick={onAddHabit} size="sm" className="bg-primary hover:bg-primary-hover text-white rounded-full">
+            <Plus className="h-4 w-4 mr-1" />
+            Agregar
+          </Button>
+        </div>
+
+        {filteredHabits.length === 0 ? (
+          <Card className="p-8 text-center">
+            <div className="text-6xl mb-4">🌱</div>
+            <h3 className="text-lg font-semibold mb-2">
+              {selectedCategory === "todas" ? "Comienza tu viaje" : "No hay hábitos en esta categoría"}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              {selectedCategory === "todas"
+                ? "Agrega tu primer micro-hábito y empieza a construir una mejor versión de ti"
+                : "Agrega un nuevo hábito en esta categoría"}
+            </p>
+            <Button onClick={onAddHabit} className="bg-primary hover:bg-primary-hover text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Crear mi primer hábito
+            </Button>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filteredHabits.map((habit) => {
+              const isCompleted = habit.completedDates.includes(today)
+              return (
+                <Card
+                  key={habit.id}
+                  className={`p-4 transition-all hover:shadow-md ${
+                    isCompleted ? "bg-success/5 border-success/30" : "bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="flex items-center gap-4 flex-1 cursor-pointer"
+                      onClick={() => onToggleHabit(habit.id)}
+                    >
+                      <div className="text-3xl">{habit.icon}</div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
+                          {habit.name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="capitalize">{habit.category}</span>
+                          <span>•</span>
+                          <span className="capitalize">{habit.frequency}</span>
+                          {habit.reminderTime && (
+                            <>
+                              <span>•</span>
+                              <div className="flex items-center gap-1">
+                                <Bell className="h-3 w-3" />
+                                <span>{habit.reminderTime}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEditHabit(habit)
+                      }}
+                      className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+                    >
+                      <MoreVertical className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-8 w-8 text-success" />
+                    ) : (
+                      <Circle className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Motivational Quote */}
+      <Card className="p-4 bg-surface-secondary border-none">
+        <p className="text-sm text-center text-muted-foreground italic">
+          "Los pequeños cambios diarios crean resultados extraordinarios"
+        </p>
+      </Card>
+    </div>
+  )
+}
