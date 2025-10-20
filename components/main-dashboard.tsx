@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Plus, CheckCircle2, Circle, Filter, MoreVertical, Bell } from "lucide-react"
+import { Plus, CheckCircle2, Circle, Filter, MoreVertical, Bell, Users } from 'lucide-react'
 import type { Habit } from "@/app/page"
 
 interface MainDashboardProps {
@@ -111,6 +111,8 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
           <div className="space-y-3">
             {filteredHabits.map((habit) => {
               const isCompleted = habit.completedDates.includes(today)
+              const isGroupHabit = !!habit.groupId
+
               return (
                 <Card
                   key={habit.id}
@@ -125,9 +127,17 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                     >
                       <div className="text-3xl">{habit.icon}</div>
                       <div className="flex-1">
-                        <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
-                          {habit.name}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
+                            {habit.name}
+                          </h3>
+                          {isGroupHabit && (
+                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
+                              <Users className="h-3 w-3" />
+                              {habit.groupName}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span className="capitalize">{habit.category}</span>
                           <span>•</span>
@@ -144,15 +154,17 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onEditHabit(habit)
-                      }}
-                      className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="h-5 w-5 text-muted-foreground" />
-                    </button>
+                    {!isGroupHabit && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onEditHabit(habit)
+                        }}
+                        className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+                      >
+                        <MoreVertical className="h-5 w-5 text-muted-foreground" />
+                      </button>
+                    )}
                     {isCompleted ? (
                       <CheckCircle2 className="h-8 w-8 text-success" />
                     ) : (

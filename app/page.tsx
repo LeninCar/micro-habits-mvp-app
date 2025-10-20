@@ -6,6 +6,7 @@ import { AddHabitModal } from "@/components/add-habit-modal"
 import { StreakView } from "@/components/streak-view"
 import { GroupView } from "@/components/group-view"
 import { ActiveBreakView } from "@/components/active-break-view"
+import { ProfileView } from "@/components/profile-view"
 import { BottomNav } from "@/components/bottom-nav"
 import { EditHabitModal } from "@/components/edit-habit-modal"
 import { CreateGroupModal } from "@/components/create-group-modal"
@@ -19,6 +20,8 @@ export type Habit = {
   completedDates: string[]
   createdAt: string
   reminderTime?: string
+  groupId?: string
+  groupName?: string
 }
 
 export type Group = {
@@ -30,10 +33,11 @@ export type Group = {
   activeToday: number
   createdAt: string
   isJoined: boolean
+  habits?: Habit[]
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<"dashboard" | "streak" | "group" | "break">("dashboard")
+  const [currentView, setCurrentView] = useState<"dashboard" | "streak" | "group" | "break" | "profile">("dashboard")
   const [habits, setHabits] = useState<Habit[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -80,7 +84,6 @@ export default function Home() {
     if (savedGroups) {
       setGroups(JSON.parse(savedGroups))
     } else {
-      // Default groups
       const defaultGroups: Group[] = [
         {
           id: "1",
@@ -91,6 +94,30 @@ export default function Home() {
           activeToday: 18,
           createdAt: new Date().toISOString(),
           isJoined: false,
+          habits: [
+            {
+              id: "group-1-habit-1",
+              name: "Revisar apuntes 15 min",
+              category: "estudio",
+              frequency: "diario",
+              icon: "📝",
+              completedDates: [],
+              createdAt: new Date().toISOString(),
+              groupId: "1",
+              groupName: "Estudiantes Productivos",
+            },
+            {
+              id: "group-1-habit-2",
+              name: "Hacer ejercicios de práctica",
+              category: "estudio",
+              frequency: "diario",
+              icon: "✍️",
+              completedDates: [],
+              createdAt: new Date().toISOString(),
+              groupId: "1",
+              groupName: "Estudiantes Productivos",
+            },
+          ],
         },
         {
           id: "2",
@@ -101,6 +128,30 @@ export default function Home() {
           activeToday: 31,
           createdAt: new Date().toISOString(),
           isJoined: false,
+          habits: [
+            {
+              id: "group-2-habit-1",
+              name: "Caminar 10 minutos",
+              category: "salud",
+              frequency: "diario",
+              icon: "🚶",
+              completedDates: [],
+              createdAt: new Date().toISOString(),
+              groupId: "2",
+              groupName: "Vida Saludable",
+            },
+            {
+              id: "group-2-habit-2",
+              name: "Beber 2 vasos de agua",
+              category: "salud",
+              frequency: "diario",
+              icon: "💧",
+              completedDates: [],
+              createdAt: new Date().toISOString(),
+              groupId: "2",
+              groupName: "Vida Saludable",
+            },
+          ],
         },
       ]
       setGroups(defaultGroups)
@@ -157,6 +208,32 @@ export default function Home() {
     )
   }
 
+  const toggleGroupHabitCompletion = (groupId: string, habitId: string) => {
+    const today = new Date().toISOString().split("T")[0]
+    setGroups(
+      groups.map((group) => {
+        if (group.id === groupId && group.habits) {
+          return {
+            ...group,
+            habits: group.habits.map((habit) => {
+              if (habit.id === habitId) {
+                const isCompleted = habit.completedDates.includes(today)
+                return {
+                  ...habit,
+                  completedDates: isCompleted
+                    ? habit.completedDates.filter((date) => date !== today)
+                    : [...habit.completedDates, today],
+                }
+              }
+              return habit
+            }),
+          }
+        }
+        return group
+      }),
+    )
+  }
+
   const createGroup = (group: Omit<Group, "id" | "members" | "activeToday" | "createdAt" | "isJoined">) => {
     const newGroup: Group = {
       ...group,
@@ -165,6 +242,7 @@ export default function Home() {
       activeToday: 1,
       createdAt: new Date().toISOString(),
       isJoined: true,
+      habits: [],
     }
     setGroups([...groups, newGroup])
   }
@@ -185,25 +263,34 @@ export default function Home() {
     )
   }
 
+  const allHabits = [
+    ...habits,
+    ...groups
+      .filter((g) => g.isJoined)
+      .flatMap((g) => g.habits || []),
+  ]
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {currentView === "dashboard" && (
         <MainDashboard
-          habits={habits}
+          habits={allHabits}
           onToggleHabit={toggleHabitCompletion}
           onAddHabit={() => setIsAddModalOpen(true)}
           onEditHabit={setEditingHabit}
         />
       )}
-      {currentView === "streak" && <StreakView habits={habits} />}
+      {currentView === "streak" && <StreakView habits={allHabits} />}
       {currentView === "group" && (
         <GroupView
           groups={groups}
           onCreateGroup={() => setIsCreateGroupModalOpen(true)}
           onToggleGroupMembership={toggleGroupMembership}
+          onToggleGroupHabit={toggleGroupHabitCompletion}
         />
       )}
       {currentView === "break" && <ActiveBreakView />}
+      {currentView === "profile" && <ProfileView habits={allHabits} groups={groups} />}
 
       <AddHabitModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={addHabit} />
 
