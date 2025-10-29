@@ -33,25 +33,6 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
   const [showShareNotification, setShowShareNotification] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
 
-  const getGroupDetails = (group: Group) => ({
-    ...group,
-    createdDate: "15 de Enero, 2025",
-    habits: group.habits || [],
-    topMembers: [
-      { name: "María", avatar: "👩", streak: 15, habits: 8 },
-      { name: "Carlos", avatar: "👨", streak: 12, habits: 6 },
-      { name: "Ana", avatar: "👧", streak: 10, habits: 7 },
-      { name: "Luis", avatar: "👦", streak: 8, habits: 5 },
-    ],
-    recentActivity: [
-      { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
-      { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
-      { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
-      { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
-    ],
-    weeklyProgress: 78,
-  })
-
   // ENVOLTORIO: une/sale y actualiza joinedAt localmente
   const handleToggleGroupMembership = (group: Group) => {
     const isLeaving = !!group.isJoined
