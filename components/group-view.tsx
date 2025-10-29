@@ -33,48 +33,24 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
   const [showShareNotification, setShowShareNotification] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
 
-   const [selectedHabit, setSelectedHabit] = useState<{ id: string; name: string } | null>(null)
-
-  // NUEVO: usuario actual (puedes mapearlo a tu auth real)
-// 1) currentUser con hábitos que sigue (mock)
-  const currentUser: Member = useMemo(
-    () => ({ name: "Tú", avatar: "🧑", joinedAt: new Date().toISOString(), habitsIds: ["1", "2"] }),
-    []
-  )
-
-
-  // NUEVO: guardamos cuándo te uniste (por grupo) para mostrar “se unió hace X”
-  const [membershipMeta, setMembershipMeta] = useState<Record<string, { joinedAt: string }>>({})
-
-  // Helper: “hace 2 semanas”, “hace 3 días”, etc.
-  const relativeTime = (iso: string) => {
-    const rtf = new Intl.RelativeTimeFormat("es-CO", { numeric: "auto" })
-    const now = Date.now()
-    const t = new Date(iso).getTime()
-    const diffSec = Math.round((t - now) / 1000)
-    const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-      ["year", 60 * 60 * 24 * 365],
-      ["month", 60 * 60 * 24 * 30],
-      ["week", 60 * 60 * 24 * 7],
-      ["day", 60 * 60 * 24],
-      ["hour", 60 * 60],
-      ["minute", 60],
-      ["second", 1],
-    ]
-    for (const [unit, secondsInUnit] of units) {
-      if (Math.abs(diffSec) >= secondsInUnit || unit === "second") {
-        const value = Math.round(diffSec / secondsInUnit)
-        return rtf.format(value, unit)
-      }
-    }
-    return "hace un momento"
-  }
-
-  const mockActivity = [
-    { user: "María", habit: "Meditar 5 minutos", time: "hace 10 min", avatar: "👩" },
-    { user: "Carlos", habit: "Leer 10 páginas", time: "hace 25 min", avatar: "👨" },
-    { user: "Ana", habit: "Ejercicio matutino", time: "hace 1 hora", avatar: "👧" },
-  ]
+  const getGroupDetails = (group: Group) => ({
+    ...group,
+    createdDate: "15 de Enero, 2025",
+    habits: group.habits || [],
+    topMembers: [
+      { name: "María", avatar: "👩", streak: 15, habits: 8 },
+      { name: "Carlos", avatar: "👨", streak: 12, habits: 6 },
+      { name: "Ana", avatar: "👧", streak: 10, habits: 7 },
+      { name: "Luis", avatar: "👦", streak: 8, habits: 5 },
+    ],
+    recentActivity: [
+      { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
+      { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
+      { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
+      { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
+    ],
+    weeklyProgress: 78,
+  })
 
   // ENVOLTORIO: une/sale y actualiza joinedAt localmente
   const handleToggleGroupMembership = (group: Group) => {
@@ -346,26 +322,19 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             <div className="space-y-3">
               {details.habits.map((habit) => {
                 const isCompleted = habit.completedDates.includes(today)
-                const isSelected = selectedHabit?.id === habit.id
+                const canComplete = details.isJoined
 
                 return (
                   <Card
                     key={habit.id}
-                    className={`p-4 cursor-pointer transition-all hover:shadow-md border
-                      ${
-                        isSelected
-                          ? "bg-success/10 border-success/40 ring-2 ring-success" // seleccionado
-                          : isCompleted
-                            ? "bg-success/5 border-success/30"                    // completado hoy
-                            : "bg-card"                                           // default
-                      }`}
+                    className={`p-4 transition-all ${
+                      canComplete ? "cursor-pointer hover:shadow-md" : "cursor-not-allowed opacity-60"
+                    } ${isCompleted ? "bg-success/5 border-success/30" : "bg-card"}`}
                     onClick={() => {
-                      onToggleGroupHabit(details.id, habit.id)
-                      setSelectedHabit((prev) =>
-                        prev?.id === habit.id ? null : { id: habit.id, name: habit.name }
-                      )
+                      if (canComplete) {
+                        onToggleGroupHabit(details.id, habit.id)
+                      }
                     }}
-                    title={isSelected ? "Hábito seleccionado" : "Seleccionar este hábito"}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">{habit.icon}</div>
@@ -388,6 +357,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span className="capitalize">{habit.frequency}</span>
+                          {!canComplete && <span className="text-xs text-destructive">• Únete para participar</span>}
                         </div>
                       </div>
 
@@ -609,7 +579,11 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           Actividad Reciente
         </h2>
         <div className="space-y-3">
-          {mockActivity.map((activity, index) => (
+          {[
+            { user: "María", habit: "Meditar 5 minutos", time: "hace 10 min", avatar: "👩" },
+            { user: "Carlos", habit: "Leer 10 páginas", time: "hace 25 min", avatar: "👨" },
+            { user: "Ana", habit: "Ejercicio matutino", time: "hace 1 hora", avatar: "👧" },
+          ].map((activity, index) => (
             <Card key={index} className="p-4">
               <div className="flex items-center gap-3">
                 <div className="text-3xl">{activity.avatar}</div>

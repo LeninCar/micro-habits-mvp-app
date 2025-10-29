@@ -192,18 +192,74 @@ export default function Home() {
 
   const toggleHabitCompletion = (habitId: string) => {
     const today = new Date().toISOString().split("T")[0]
-    setHabits(
-      habits.map((habit) => {
-        if (habit.id === habitId) {
-          const isCompleted = habit.completedDates.includes(today)
+
+    let isGroupHabit = false
+    let targetGroupId = ""
+
+    groups.forEach((group) => {
+      if (group.habits?.some((h) => h.id === habitId)) {
+        isGroupHabit = true
+        targetGroupId = group.id
+      }
+    })
+
+    if (isGroupHabit) {
+      // If it's a group habit, update it in the groups state
+      toggleGroupHabitCompletion(targetGroupId, habitId)
+    } else {
+      // Otherwise, update it in the personal habits state
+      setHabits(
+        habits.map((habit) => {
+          if (habit.id === habitId) {
+            const isCompleted = habit.completedDates.includes(today)
+            return {
+              ...habit,
+              completedDates: isCompleted
+                ? habit.completedDates.filter((date) => date !== today)
+                : [...habit.completedDates, today],
+            }
+          }
+          return habit
+        }),
+      )
+    }
+  }
+
+  const toggleGroupHabitCompletion = (groupId: string, habitId: string) => {
+    const today = new Date().toISOString().split("T")[0]
+
+    setGroups(
+      groups.map((group) => {
+        // Only allow completion if user is joined to the group
+        if (group.id === groupId && group.isJoined && group.habits) {
           return {
-            ...habit,
-            completedDates: isCompleted
-              ? habit.completedDates.filter((date) => date !== today)
-              : [...habit.completedDates, today],
+            ...group,
+            habits: group.habits.map((habit) => {
+              if (habit.id === habitId) {
+                const isCompleted = habit.completedDates.includes(today)
+                const newCompletedDates = isCompleted
+                  ? habit.completedDates.filter((date) => date !== today)
+                  : [...habit.completedDates, today]
+
+                console.log("[v0] Toggling group habit:", {
+                  habitId,
+                  habitName: habit.name,
+                  groupId,
+                  groupName: group.name,
+                  wasCompleted: isCompleted,
+                  newCompletedDates,
+                })
+
+                return {
+                  ...habit,
+                  completedDates: newCompletedDates,
+                }
+              }
+              return habit
+            }),
           }
         }
-        return habit
+        return group
       }),
     )
   }
@@ -263,12 +319,7 @@ export default function Home() {
     )
   }
 
-  const allHabits = [
-    ...habits,
-    ...groups
-      .filter((g) => g.isJoined)
-      .flatMap((g) => g.habits || []),
-  ]
+  const allHabits = [...habits, ...groups.filter((g) => g.isJoined).flatMap((g) => g.habits || [])]
 
   return (
     <div className="min-h-screen bg-background pb-20">
