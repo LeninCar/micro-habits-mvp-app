@@ -18,7 +18,7 @@ import {
   Circle,
 } from "lucide-react"
 import type { Group } from "@/app/page"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 interface GroupViewProps {
   groups: Group[]
@@ -26,6 +26,8 @@ interface GroupViewProps {
   onToggleGroupMembership: (groupId: string) => void
   onToggleGroupHabit: (groupId: string, habitId: string) => void
 }
+
+type Member = { name: string; avatar: string; joinedAt: string; streak?: number; habits?: number, habitsIds?: string[] }
 
 export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onToggleGroupHabit }: GroupViewProps) {
   const [showShareNotification, setShowShareNotification] = useState(false)
@@ -50,49 +52,91 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
     weeklyProgress: 78,
   })
 
-  const getGroupDetails = (group: Group) => ({
-    ...group,
-    createdDate: "15 de Enero, 2025",
-    habits: [
-      {
-        id: "1",
-        name: "Meditar 5 minutos",
-        category: "Bienestar",
-        frequency: "Diario",
-        icon: "🧘‍♀️",
-        completedDates: ["2023-10-01"],
-      },
-      {
-        id: "2",
-        name: "Leer 10 páginas",
-        category: "Estudio",
-        frequency: "Diario",
-        icon: "📚",
-        completedDates: ["2023-10-01"],
-      },
-      {
-        id: "3",
-        name: "Ejercicio matutino",
-        category: "Salud",
-        frequency: "Diario",
-        icon: "🏃‍♀️",
-        completedDates: ["2023-10-01"],
-      },
-    ],
-    topMembers: [
-      { name: "María", avatar: "👩", streak: 15, habits: 8 },
-      { name: "Carlos", avatar: "👨", streak: 12, habits: 6 },
-      { name: "Ana", avatar: "👧", streak: 10, habits: 7 },
-      { name: "Luis", avatar: "👦", streak: 8, habits: 5 },
-    ],
-    recentActivity: [
-      { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
-      { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
-      { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
-      { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
-    ],
-    weeklyProgress: 78,
-  })
+  // ENVOLTORIO: une/sale y actualiza joinedAt localmente
+  const handleToggleGroupMembership = (group: Group) => {
+    const isLeaving = !!group.isJoined
+    onToggleGroupMembership(group.id)
+    setMembershipMeta((prev) => {
+      const next = { ...prev }
+      if (isLeaving) {
+        delete next[group.id]
+      } else {
+        next[group.id] = { joinedAt: new Date().toISOString() }
+      }
+      return next
+    })
+    // Si estás en la vista de detalles, refleja el cambio sin esperar al padre
+    if (selectedGroup && selectedGroup.id === group.id) {
+      setSelectedGroup({ ...selectedGroup, isJoined: !isLeaving })
+    }
+    if (isLeaving) setSelectedHabit(null)
+  }
+
+  const getGroupDetails = (group: Group) => {
+
+    const habits = [
+      { id: "1", name: "Meditar 5 minutos", category: "Bienestar", frequency: "Diario", icon: "🧘‍♀️", completedDates: ["2023-10-01"] },
+      { id: "2", name: "Leer 10 páginas", category: "Estudio", frequency: "Diario", icon: "📚", completedDates: ["2023-10-01"] },
+      { id: "3", name: "Ejercicio matutino", category: "Salud", frequency: "Diario", icon: "🏃‍♀️", completedDates: ["2023-10-01"] },
+    ]
+    // Members base (mock) con joinedAt ficticio
+  // 1) baseMembers (mock) con habitsIds por cada miembro
+    const baseMembers: Member[] = [
+      { name: "María",  avatar: "👩", joinedAt: "2025-01-05T10:00:00Z", streak: 15, habits: 8, habitsIds: ["1", "2"] },
+      { name: "Carlos", avatar: "👨", joinedAt: "2025-01-08T14:00:00Z", streak: 12, habits: 6, habitsIds: ["2"] },
+      { name: "Ana",    avatar: "👧", joinedAt: "2025-01-12T09:30:00Z", streak: 10, habits: 7, habitsIds: ["1", "3"] },
+      { name: "Luis",   avatar: "👦", joinedAt: "2025-01-15T12:00:00Z", streak: 8, habits: 5, habitsIds: ["3"] },
+    ]
+
+
+    // Si estás unido, te agregamos con tu fecha de unión (del meta si existe; si no, ahora)
+    const joinedMeta = membershipMeta[group.id]
+    const youJoinedAt = joinedMeta?.joinedAt ?? currentUser.joinedAt
+
+    const membersList: Member[] = group.isJoined
+      ? [{ ...currentUser, joinedAt: youJoinedAt }, ...baseMembers]
+      : baseMembers
+
+    return {
+      ...group,
+      createdDate: "15 de Enero, 2025",
+      membersList,
+      membersCount: membersList.length,
+      habits: [
+        {
+          id: "1",
+          name: "Meditar 5 minutos",
+          category: "Bienestar",
+          frequency: "Diario",
+          icon: "🧘‍♀️",
+          completedDates: ["2023-10-01"],
+        },
+        {
+          id: "2",
+          name: "Leer 10 páginas",
+          category: "Estudio",
+          frequency: "Diario",
+          icon: "📚",
+          completedDates: ["2023-10-01"],
+        },
+        {
+          id: "3",
+          name: "Ejercicio matutino",
+          category: "Salud",
+          frequency: "Diario",
+          icon: "🏃‍♀️",
+          completedDates: ["2023-10-01"],
+        },
+      ],
+      recentActivity: [
+        { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
+        { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
+        { user: "Ana", avatar: "👧", action: "completó", habit: "Ejercicio matutino", time: "hace 1 hora" },
+        { user: "Luis", avatar: "👦", action: "se unió al grupo", habit: "", time: "hace 2 horas" },
+      ],
+      weeklyProgress: 78,
+    }
+  }
 
   const joinedGroups = groups.filter((g) => g.isJoined)
   const availableGroups = groups.filter((g) => !g.isJoined)
@@ -123,6 +167,16 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
     const details = getGroupDetails(selectedGroup)
     const today = new Date().toISOString().split("T")[0]
 
+    // separación de miembros según hábito seleccionado
+    const membersFollowing = selectedHabit
+      ? details.membersList.filter(m => (m.habitsIds ?? []).includes(selectedHabit.id))
+      : details.membersList
+
+    const membersNotFollowing = selectedHabit
+      ? details.membersList.filter(m => !(m.habitsIds ?? []).includes(selectedHabit.id))
+      : []
+
+
     return (
       <div className="max-w-md mx-auto px-4 py-6">
         {showShareNotification && (
@@ -144,7 +198,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
 
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{details.members}</div>
+                <div className="text-2xl font-bold text-primary">{details.membersList.length}</div>
                 <div className="text-xs text-muted-foreground">Miembros</div>
               </div>
               <div className="text-center">
@@ -173,7 +227,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
               {details.isJoined && (
                 <Button
                   onClick={() => {
-                    onToggleGroupMembership(details.id)
+                    handleToggleGroupMembership(details) // usa envoltorio
                     setSelectedGroup(null)
                   }}
                   variant="outline"
@@ -186,11 +240,84 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           </Card>
         </div>
 
+        {/* NUEVO: Miembros del grupo */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
+            Miembros del grupo
+          </h2>
+          <div className="space-y-3">
+            {details.membersList.map((m, idx) => (
+              <Card key={idx} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{m.avatar}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">{m.name}</span>
+                      {m.name === "Tú" && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">tú</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Si hay filtro, muestra encabezado y lista de quienes siguen el hábito */}
+        {selectedHabit && (
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            También siguen “{selectedHabit.name}” ({membersFollowing.length})
+          </p>
+        )}
+        <div className="space-y-3">
+          {membersFollowing.map((m, idx) => (
+            <Card key={`in-${idx}`} className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{m.avatar}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-foreground">{m.name}</span>
+                    {m.name === "Tú" && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">tú</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Si hay filtro, muestra los que NO siguen */}
+        {selectedHabit && (
+          <>
+            <p className="text-xs font-medium text-muted-foreground mt-5 mb-2">
+              No siguen “{selectedHabit.name}” ({membersNotFollowing.length})
+            </p>
+            <div className="space-y-3">
+              {membersNotFollowing.map((m, idx) => (
+                <Card key={`out-${idx}`} className="p-4 opacity-90">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">{m.avatar}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-foreground">{m.name}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Se unió {relativeTime(m.joinedAt)}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Target className="h-6 w-6 text-primary" />
             Hábitos Compartidos
           </h2>
+
           {details.habits && details.habits.length > 0 ? (
             <div className="space-y-3">
               {details.habits.map((habit) => {
@@ -213,10 +340,18 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                       <div className="text-3xl">{habit.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
+                          <h3
+                            className={`font-semibold ${
+                              isSelected ? "text-success" : isCompleted ? "text-success" : "text-foreground"
+                            }`}
+                          >
                             {habit.name}
                           </h3>
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              isSelected ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            }`}
+                          >
                             {habit.category}
                           </span>
                         </div>
@@ -225,7 +360,9 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                           {!canComplete && <span className="text-xs text-destructive">• Únete para participar</span>}
                         </div>
                       </div>
-                      {isCompleted ? (
+
+                      {/* Ícono a la derecha: verde si está seleccionado o completado */}
+                      {isSelected || isCompleted ? (
                         <CheckCircle2 className="h-8 w-8 text-success" />
                       ) : (
                         <Circle className="h-8 w-8 text-muted-foreground" />
@@ -243,13 +380,14 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           )}
         </div>
 
+
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Award className="h-6 w-6 text-secondary" />
             Miembros Destacados
           </h2>
           <div className="space-y-3">
-            {details.topMembers.map((member, index) => (
+            {details.membersList.slice(0, 4).map((member, index) => (
               <Card key={index} className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">{member.avatar}</div>
@@ -259,8 +397,8 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                       {index === 0 && <span className="text-lg">🏆</span>}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>🔥 {member.streak} días</span>
-                      <span>✅ {member.habits} hábitos</span>
+                      {typeof member.streak === "number" && <span>🔥 {member.streak} días</span>}
+                      {typeof member.habits === "number" && <span>✅ {member.habits} hábitos</span>}
                     </div>
                   </div>
                 </div>
@@ -365,7 +503,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                   <Button
                     onClick={(e) => {
                       e.stopPropagation()
-                      onToggleGroupMembership(group.id)
+                      handleToggleGroupMembership(group) // usa envoltorio
                     }}
                     variant="outline"
                     className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/10"
@@ -422,7 +560,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                 <Button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onToggleGroupMembership(group.id)
+                    handleToggleGroupMembership(group) // usa envoltorio
                   }}
                   className="w-full bg-primary hover:bg-primary-hover text-white"
                 >
