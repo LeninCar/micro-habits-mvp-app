@@ -14,7 +14,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 Your project is live at:
 
-**[https://vercel.com/lenin-carabalis-projects/v0-micro-habits-mobile-app](https://vercel.com/lenin-carabalis-projects/v0-micro-habits-mobile-app)**
+**[https://vercel.com/lenin-carabalis-projects/v0-micro-habits-mobile-app](https://vercel.com/lenin-carabalis-projects/micro-habits-mvp-app)**
 
 ## Build your app
 
