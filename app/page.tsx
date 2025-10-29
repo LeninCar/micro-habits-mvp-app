@@ -264,32 +264,6 @@ export default function Home() {
     )
   }
 
-  const toggleGroupHabitCompletion = (groupId: string, habitId: string) => {
-    const today = new Date().toISOString().split("T")[0]
-    setGroups(
-      groups.map((group) => {
-        if (group.id === groupId && group.habits) {
-          return {
-            ...group,
-            habits: group.habits.map((habit) => {
-              if (habit.id === habitId) {
-                const isCompleted = habit.completedDates.includes(today)
-                return {
-                  ...habit,
-                  completedDates: isCompleted
-                    ? habit.completedDates.filter((date) => date !== today)
-                    : [...habit.completedDates, today],
-                }
-              }
-              return habit
-            }),
-          }
-        }
-        return group
-      }),
-    )
-  }
-
   const createGroup = (group: Omit<Group, "id" | "members" | "activeToday" | "createdAt" | "isJoined">) => {
     const newGroup: Group = {
       ...group,
