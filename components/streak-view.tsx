@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import { Flame, Target, Award } from "lucide-react"
+import { Flame, Target, Award, TrendingUp, Calendar } from "lucide-react"
 import type { Habit } from "@/app/page"
 
 interface StreakViewProps {
@@ -42,32 +42,57 @@ export function StreakView({ habits }: StreakViewProps) {
   return (
     <div className="max-w-md mx-auto px-4 py-6">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">Tu Progreso</h1>
         <p className="text-muted-foreground text-sm">Celebra cada logro en tu camino</p>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5">
-          <div className="flex items-center gap-3 mb-2">
-            <Flame className="h-6 w-6 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Racha Actual</span>
+        <Card className="p-6 bg-gradient-to-br glow-pulse from-orange-500/20 to-orange-500/5 border-2 border-orange-500/40 shadow-lg relative overflow-hidden">
+          {/* Efecto de brillo */}
+          <div className="absolute inset-0 bg-gradient-radial from-orange-500/10 to-transparent"></div>
+
+          <div className="flex flex-col items-center relative z-10">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3 animate-pulse">
+              <Flame className="h-20 w-20 text-orange-500 drop-shadow-glow" />
+            </div>
+            <p className="text-3xl font-bold text-orange-500 mb-1">{longestStreak}</p>
+            <p className="text-sm text-orange-500/80 font-medium">Días de racha</p>
           </div>
-          <div className="text-3xl font-bold text-primary">{longestStreak}</div>
-          <div className="text-xs text-muted-foreground">días consecutivos</div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-br from-secondary/10 to-secondary/5">
-          <div className="flex items-center gap-3 mb-2">
-            <Target className="h-6 w-6 text-secondary" />
-            <span className="text-sm font-medium text-muted-foreground">Total</span>
+        <Card className="p-6 bg-gradient-to-br from-success/20 to-success/5 border-2 border-success/30 shadow-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3">
+              <TrendingUp className="h-16 w-16 text-success" />
+            </div>
+            <p className="text-3xl font-bold text-success mb-1">{totalCompletions}</p>
+            <p className="text-sm text-success/80 font-medium">Hábitos completados</p>
           </div>
-          <div className="text-3xl font-bold text-secondary">{totalCompletions}</div>
-          <div className="text-xs text-muted-foreground">hábitos completados</div>
         </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 shadow-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3">
+              <Calendar className="h-16 w-16 text-primary" />
+            </div>
+            <p className="text-3xl font-bold text-primary mb-1">{activeHabits}</p>
+            <p className="text-sm text-primary/80 font-medium">Días activos</p>
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-amber-900/20 to-amber-900/5 border-2 border-amber-900/30 shadow-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3">
+              <Target className="h-16 w-16 text-amber-900" />
+            </div>
+            <p className="text-3xl font-bold text-amber-900 mb-1">{totalCompletions > 0 ? Math.round(totalCompletions / (habits.length + totalCompletions) * 100) : 0}%</p>
+            <p className="text-sm text-amber-900/80 font-medium">Tasa de éxito</p>
+          </div>
+        </Card>    
       </div>
-
+    
       {/* Individual Habit Streaks */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">Rachas por Hábito</h2>
