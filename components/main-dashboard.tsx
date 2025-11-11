@@ -121,10 +121,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div
-                      className="flex items-center gap-4 flex-1 cursor-pointer"
-                      onClick={() => onToggleHabit(habit.id)}
-                    >
+                    <div className="flex items-center gap-4 flex-1">
                       <div className="text-3xl">{habit.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -165,11 +162,17 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                         <MoreVertical className="h-5 w-5 text-muted-foreground" />
                       </button>
                     )}
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-8 w-8 text-success" />
-                    ) : (
-                      <Circle className="h-8 w-8 text-muted-foreground" />
-                    )}
+                    <button
+                      onClick={() => onToggleHabit(habit.id)}
+                      className="p-1 hover:scale-110 transition-transform"
+                      aria-label={isCompleted ? "Marcar como imcompleto" : "Marcar como completado"}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-8 w-8 text-success cursor-pointer" />
+                      ) : (
+                        <Circle className="h-8 w-8 text-muted-foreground hover:text-primary cursor-pointer" />
+                      )}
+                    </button>
                   </div>
                 </Card>
               )
