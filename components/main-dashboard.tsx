@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -16,6 +17,7 @@ interface MainDashboardProps {
 
 export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }: MainDashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todas")
+  const [completingHabitId, setCompletingHabitId] = useState<string | null>(null)
 
   const today = new Date().toISOString().split("T")[0]
 
@@ -33,6 +35,22 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
     { value: "finanzas", label: "Finanzas", icon: "💰" },
     { value: "bienestar", label: "Bienestar", icon: "🧘" },
   ]
+
+  const handleToggleHabit = (habitId: string) => {
+    const habit = habits.find((h) => h.id === habitId)
+    const isCurrentlyCompleted = habit?.completedDates.includes(today)
+
+    setCompletingHabitId(habitId)
+    onToggleHabit(habitId)
+
+    // Reproducir sonido de exito solo si el hábito NO estaba completado (se está marcando)
+    if (!isCurrentlyCompleted) {
+      const audio = new Audio("/sound/success.mp3")
+      audio.play().catch(() => {})
+    }
+
+    setTimeout(() => setCompletingHabitId(null), 1000)
+  }
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
@@ -112,69 +130,118 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
             {filteredHabits.map((habit) => {
               const isCompleted = habit.completedDates.includes(today)
               const isGroupHabit = !!habit.groupId
+              const isAnimating = completingHabitId === habit.id
 
               return (
-                <Card
+                <motion.div
                   key={habit.id}
-                  className={`p-4 transition-all hover:shadow-md ${
-                    isCompleted ? "bg-success/5 border-success/30" : "bg-card"
-                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="text-3xl">{habit.icon}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
-                            {habit.name}
-                          </h3>
-                          {isGroupHabit && (
-                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
-                              <Users className="h-3 w-3" />
-                              {habit.groupName}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span className="capitalize">{habit.category}</span>
-                          <span>•</span>
-                          <span className="capitalize">{habit.frequency}</span>
-                          {habit.reminderTime && (
-                            <>
-                              <span>•</span>
-                              <div className="flex items-center gap-1">
-                                <Bell className="h-3 w-3" />
-                                <span>{habit.reminderTime}</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {!isGroupHabit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onEditHabit(habit)
-                        }}
-                        className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
-                      >
-                        <MoreVertical className="h-5 w-5 text-muted-foreground" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onToggleHabit(habit.id)}
-                      className="p-1 hover:scale-110 transition-transform"
-                      aria-label={isCompleted ? "Marcar como imcompleto" : "Marcar como completado"}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-8 w-8 text-success cursor-pointer" />
-                      ) : (
-                        <Circle className="h-8 w-8 text-muted-foreground hover:text-primary cursor-pointer" />
+                  <Card
+                    className={`p-4 transition-all hover:shadow-md relative overflow-hidden ${
+                      isCompleted ? "bg-success/5 border-success/30" : "bg-card"
+                    }`}
+                  >
+                    {/* Animacion de cofeti al completar */}
+                    <AnimatePresence>
+                      {isAnimating && isCompleted && (
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {[...Array(12)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute w-2 h-2 bg-primary rounded-full"
+                                initial={{ 
+                                  x: 0,
+                                  y: 0,
+                                  opacity: 1,
+                                  scale: 0 
+                                }}
+                                animate={{ 
+                                  x: Math.cos(i * 30 * Math.PI / 180) * 100,
+                                  y: Math.sin(i * 30 * Math.PI / 180) * 100,
+                                  opacity: 0,
+                                  scale: 1,
+                                }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                              />
+                            ))}
+                          </div>
+                        </motion.div>
                       )}
-                    </button>
-                  </div>
-                </Card>
+                    </AnimatePresence>
+
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="text-3xl">{habit.icon}</div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className={`font-semibold ${isCompleted ? "text-success" : "text-foreground"}`}>
+                                {habit.name}
+                              </h3>
+                              {isGroupHabit && (
+                                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
+                                  <Users className="h-3 w-3" />
+                                  {habit.groupName}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span className="capitalize">{habit.category}</span>
+                              <span>•</span>
+                              <span className="capitalize">{habit.frequency}</span>
+                              {habit.reminderTime && (
+                                <>
+                                  <span>•</span>
+                                  <div className="flex items-center gap-1">
+                                    <Bell className="h-3 w-3" />
+                                    <span>{habit.reminderTime}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {!isGroupHabit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEditHabit(habit)
+                            }}
+                            className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+                          >
+                            <MoreVertical className="h-5 w-5 text-muted-foreground" />
+                          </button>
+                        )}
+                        <motion.button
+                          onClick={() => handleToggleHabit(habit.id)}
+                          className="p-1 relative"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          aria-label={isCompleted ? "Marcar como incompleto" : "Marcar como completado"}
+                        >
+                          {isCompleted ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                            >
+                              <CheckCircle2 className="h-8 w-8 text-success cursor-pointer" />
+                            </motion.div>
+                          ) : (
+                            <Circle className="h-8 w-8 text-muted-foreground hover:text-primary cursor-pointer" />
+                          )}
+                        </motion.button>
+                    </div>
+                  </Card>
+                </motion.div>
               )
             })}
           </div>
