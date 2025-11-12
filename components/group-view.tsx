@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import type { Group } from "@/app/page"
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface GroupViewProps {
   groups: Group[]
@@ -44,6 +45,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
 
   // MEJORA #1: Estado para filtro de categoría
   const [selectedCategory, setSelectedCategory] = useState<string>("todas")
+  const [completingHabitId, setCompletingHabitId] = useState<string | null>(null)
 
   const joinedGroups = groups.filter((g) => g.isJoined)
   const availableGroups = groups.filter((g) => !g.isJoined)
@@ -85,24 +87,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
         { name: "Ana", avatar: "👧", joinedAt: "2025-01-12T09:30:00Z", streak: 10, habits: 7 },
         { name: "Luis", avatar: "👦", joinedAt: "2025-01-15T12:00:00Z", streak: 8, habits: 5 },
       ],
-      habits: [
-        {
-          id: "1",
-          name: "Meditar 5 minutos",
-          category: "Bienestar",
-          frequency: "Diario",
-          icon: "🧘‍♀️",
-          completedDates: [],
-        },
-        {
-          id: "2",
-          name: "Leer 10 páginas",
-          category: "Estudio",
-          frequency: "Diario",
-          icon: "📚",
-          completedDates: [],
-        },
-      ],
+      habits: group.habits ?? [],
       recentActivity: [
         { user: "María", avatar: "👩", action: "completó", habit: "Meditar 5 minutos", time: "hace 10 min" },
         { user: "Carlos", avatar: "👨", action: "completó", habit: "Leer 10 páginas", time: "hace 25 min" },
@@ -113,8 +98,23 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
 
   // Vista de detalle de grupo
   if (selectedGroup) {
-    const details = getGroupDetails(selectedGroup)
+    const currentSelected = groups.find((g) => g.id === selectedGroup.id) || selectedGroup
+    const details = getGroupDetails(currentSelected)
     const today = new Date().toISOString().split("T")[0]
+    const canComplete = details.isJoined
+
+    const handleToggleSharedHabit = (habitId: string) => {
+      if (!canComplete) return
+      const habit = details.habits.find((h) => h.id === habitId)
+      const isCurrentlyCompleted = habit?.completedDates.includes(today)
+      setCompletingHabitId(habitId)
+      onToggleGroupHabit(details.id, habitId)
+      if (!isCurrentlyCompleted) {
+        const audio = new Audio("/sound/success.mp3")
+        audio.play().catch(() => {})
+      }
+      setTimeout(() => setCompletingHabitId(null), 1000)
+    }
 
     return (
       <div className="max-w-md mx-auto px-4 py-6">
@@ -173,18 +173,42 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             <div className="space-y-3">
               {details.habits.map((habit) => {
                 const isCompleted = habit.completedDates.includes(today)
-                const canComplete = details.isJoined
+                const isAnimating = completingHabitId === habit.id
 
                 return (
                   <Card
                     key={habit.id}
-                    className={'p-4 transition-all ' + (canComplete ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed opacity-60') + (isCompleted ? ' bg-success/5 border-success/30' : ' bg-card')}
-                    onClick={() => {
-                      if (canComplete) {
-                        onToggleGroupHabit(details.id, habit.id)
-                      }
-                    }}
+                    className={'p-4 transition-all relative overflow-hidden ' + (canComplete ? 'hover:shadow-md' : 'cursor-not-allowed opacity-60') + (isCompleted ? ' bg-success/5 border-success/30' : ' bg-card')}
                   >
+                    {/* Animación de confeti al completar */}
+                    <AnimatePresence>
+                      {isAnimating && isCompleted && (
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {[...Array(12)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute w-2 h-2 bg-primary rounded-full"
+                                initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+                                animate={{
+                                  x: Math.cos(i * 30 * Math.PI / 180) * 100,
+                                  y: Math.sin(i * 30 * Math.PI / 180) * 100,
+                                  opacity: 0,
+                                  scale: 1,
+                                }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                              />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">{habit.icon}</div>
                       <div className="flex-1">
@@ -195,11 +219,26 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                           <span className="capitalize">{habit.frequency}</span>
                         </div>
                       </div>
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-8 w-8 text-success" />
-                      ) : (
-                        <Circle className="h-8 w-8 text-muted-foreground" />
-                      )}
+                      <motion.button
+                        onClick={() => canComplete && handleToggleSharedHabit(habit.id)}
+                        className="p-1 relative"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label={isCompleted ? 'Marcar como incompleto' : 'Marcar como completado'}
+                        disabled={!canComplete}
+                      >
+                        {isCompleted ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                          >
+                            <CheckCircle2 className="h-8 w-8 text-success" />
+                          </motion.div>
+                        ) : (
+                          <Circle className="h-8 w-8 text-muted-foreground hover:text-primary" />
+                        )}
+                      </motion.button>
                     </div>
                   </Card>
                 )
