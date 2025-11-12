@@ -17,7 +17,7 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background dark:bg-background border-t border-border dark:border-border transition-colors">
       <div className="max-w-md mx-auto px-2 py-2">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
@@ -27,9 +27,9 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-                  isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all
+                  ${isActive ? "text-primary bg-primary/10 dark:bg-primary/20" : "text-muted-foreground hover:text-primary"}
+                `}
               >
                 <Icon className="h-6 w-6" />
                 <span className="text-xs font-medium">{item.label}</span>
