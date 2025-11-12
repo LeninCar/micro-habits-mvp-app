@@ -28,7 +28,7 @@ interface GroupViewProps {
   onToggleGroupHabit: (groupId: string, habitId: string) => void
 }
 
-// MEJORA: Categorías de grupos para filtrado
+// Categorías de grupos para filtrado
 const groupCategories = [
   { value: "todas", label: "Todas", icon: "🌟" },
   { value: "salud", label: "Salud", icon: "💪" },
@@ -48,7 +48,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
   const joinedGroups = groups.filter((g) => g.isJoined)
   const availableGroups = groups.filter((g) => !g.isJoined)
 
-  // MEJORA #2: Filtrar grupos disponibles por categoría
+  // Filtrar grupos disponibles por categoría
   const filteredAvailableGroups = selectedCategory === "todas" 
     ? availableGroups 
     : availableGroups.filter(g => g.category === selectedCategory)
@@ -111,7 +111,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
     }
   }
 
-  // Vista de detalle de grupo (sin cambios mayores)
+  // Vista de detalle de grupo
   if (selectedGroup) {
     const details = getGroupDetails(selectedGroup)
     const today = new Date().toISOString().split("T")[0]
@@ -307,7 +307,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
         </div>
       )}
 
-      {/* MEJORA #3: Filtros de categoría para grupos disponibles */}
+      {/* Filtros de categoría para grupos disponibles */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -320,7 +320,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           </div>
         </div>
 
-        {/* MEJORA: Botones de filtro por categoría */}
+        {/* Botones de filtro por categoría */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
           {groupCategories.map((cat) => (
             <button
