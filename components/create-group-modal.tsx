@@ -103,7 +103,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white" size="lg">
+          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover text-secondary" size="lg">
             Crear Grupo
           </Button>
         </form>
