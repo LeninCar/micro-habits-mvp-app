@@ -134,7 +134,7 @@ export function StreakView({ habits }: StreakViewProps) {
               className={`p-4 text-center ${
                 badge.unlocked
                   ? "bg-gradient-to-br from-accent/10 to-accent/5 border-accent/30"
-                  : "bg-surface-secondary opacity-50"
+                  : "bg-surface-primary opacity-50"
               }`}
             >
               <div className="text-4xl mb-2">{badge.icon}</div>

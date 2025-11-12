@@ -153,7 +153,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             <div className="flex gap-2">
               <Button
                 onClick={() => handleShareInvite(details.id, details.name)}
-                className="flex-1 bg-primary hover:bg-primary-hover text-white"
+                className="flex-1 bg-primary hover:bg-primary-hover text-secondary"
               >
                 <Share2 className="h-4 w-4 mr-2" />
                 Invitar amigo
@@ -274,7 +274,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
           <Button
             onClick={onCreateGroup}
             size="sm"
-            className="bg-primary hover:bg-primary-hover text-white rounded-full"
+            className="bg-primary hover:bg-primary-hover text-secondary rounded-full"
           >
             <Plus className="h-4 w-4 mr-1" />
             Crear
@@ -323,9 +323,9 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                       e.stopPropagation()
                       handleShareInvite(group.id, group.name)
                     }}
-                    className="flex-1 bg-primary hover:bg-primary-hover text-white"
+                    className="flex-1 bg-primary hover:bg-primary-hover text-secondary"
                   >
-                    <Share2 className="h-4 w-4 mr-2" />
+                    <Share2 className="h-4 w-4 mr-2 text-secondary" />
                     Invitar
                   </Button>
                   <Button
@@ -367,7 +367,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
               onClick={() => setSelectedCategory(cat.value)}
               className={'flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ' +
                 (selectedCategory === cat.value
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-secondary'
                   : 'bg-surface-secondary text-muted-foreground hover:bg-surface-secondary/80'
                 )}
             >
@@ -393,7 +393,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                 ? 'Invita a otros a unirse a tu viaje de micro-hábitos'
                 : 'Intenta con otra categoría o crea un nuevo grupo'}
             </p>
-            <Button onClick={onCreateGroup} className="bg-primary hover:bg-primary-hover text-white">
+            <Button onClick={onCreateGroup} className="bg-primary hover:bg-primary-hover text-secondary">
               <Plus className="h-4 w-4 mr-2" />
               Crear grupo
             </Button>
@@ -432,7 +432,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                     e.stopPropagation()
                     onToggleGroupMembership(group.id)
                   }}
-                  className="w-full bg-primary hover:bg-primary-hover text-white"
+                  className="w-full bg-primary hover:bg-primary-hover text-secondary"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Unirse al grupo

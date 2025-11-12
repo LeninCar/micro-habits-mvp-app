@@ -88,7 +88,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
               onClick={() => setSelectedCategory(cat.value)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                 selectedCategory === cat.value
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-secondary"
                   : "bg-surface-secondary text-muted-foreground hover:bg-surface-secondary/80"
               }`}
             >
@@ -103,7 +103,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-foreground">Mis Micro-Hábitos</h2>
-          <Button onClick={onAddHabit} size="sm" className="bg-primary hover:bg-primary-hover text-white rounded-full">
+          <Button onClick={onAddHabit} size="sm" className="bg-primary hover:bg-primary-hover text-secondary rounded-full">
             <Plus className="h-4 w-4 mr-1" />
             Agregar
           </Button>
@@ -249,7 +249,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
       </div>
 
       {/* Motivational Quote */}
-      <Card className="p-4 bg-surface-secondary border-none">
+      <Card className="p-4 bg-surface-primary border-none">
         <p className="text-sm text-center text-muted-foreground italic">
           "Los pequeños cambios diarios crean resultados extraordinarios"
         </p>

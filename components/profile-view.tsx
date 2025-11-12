@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Crown, CheckCircle2, Target, Users, Sparkles, Zap, Edit2, Camera, User } from "lucide-react"
 import type { Habit, Group } from "@/app/page"
 import { useState, useEffect } from "react"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 interface ProfileViewProps {
   habits: Habit[]
@@ -111,7 +112,7 @@ function EditProfileModal({
           <Button 
             onClick={handleSave}
             disabled={!name.trim()}
-            className="w-full bg-primary hover:bg-primary-hover text-white"
+            className="w-full bg-primary hover:bg-primary-hover text-secondary"
           >
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Guardar cambios
@@ -252,7 +253,7 @@ export function ProfileView({ habits, groups }: ProfileViewProps) {
           {/* Botón de editar sobre el avatar */}
           <button
             onClick={() => setShowEditProfile(true)}
-            className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-hover transition-colors shadow-lg"
+            className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-secondary rounded-full flex items-center justify-center hover:bg-primary-hover transition-colors shadow-lg"
             aria-label="Editar perfil"
           >
             <Edit2 className="h-4 w-4" />
@@ -270,6 +271,12 @@ export function ProfileView({ habits, groups }: ProfileViewProps) {
           </button>
         </div>
         <p className="text-muted-foreground text-sm">Miembro desde Enero 2025</p>
+      </div>
+
+      <div>
+        <div className="flex justify-center mb-6">
+          <ThemeSwitcher />
+        </div>
       </div>
 
       {/* Stats */}

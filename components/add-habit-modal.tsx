@@ -154,7 +154,7 @@ export function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalProps) {
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white" size="lg">
+          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover text-secondary" size="lg">
             Crear Hábito
           </Button>
         </form>

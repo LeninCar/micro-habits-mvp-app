@@ -448,7 +448,7 @@ export function ActiveBreakView() {
                   key={cat}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     selectedCategory === cat
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-secondary'
                       : 'bg-primary/10 text-primary hover:bg-primary/20'
                   }`}
                   onClick={() => setSelectedCategory(cat)}
@@ -508,7 +508,7 @@ export function ActiveBreakView() {
 
             {/* Botones de control */}
             <div className="flex gap-3 justify-center">
-              <Button onClick={toggleTimer} size="lg" className="bg-primary hover:bg-primary-hover text-white">
+              <Button onClick={toggleTimer} size="lg" className="bg-primary hover:bg-primary-hover text-secondary">
                 {isRunning ? (
                   <>
                     <Pause className="h-5 w-5 mr-2" />
