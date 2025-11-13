@@ -89,7 +89,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
               className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                 selectedCategory === cat.value
                   ? "bg-primary text-secondary"
-                  : "bg-surface-secondary text-muted-foreground hover:bg-surface-secondary/80"
+                  : "bg-primary/10 text-muted-foreground hover:bg-surface-secondary/80"
               }`}
             >
               <span>{cat.icon}</span>
@@ -120,7 +120,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                 ? "Agrega tu primer micro-hábito y empieza a construir una mejor versión de ti"
                 : "Agrega un nuevo hábito en esta categoría"}
             </p>
-            <Button onClick={onAddHabit} className="bg-primary hover:bg-primary-hover text-white">
+            <Button onClick={onAddHabit} className="bg-primary hover:bg-primary-hover text-secondary">
               <Plus className="h-4 w-4 mr-2" />
               Crear mi primer hábito
             </Button>
