@@ -145,7 +145,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
                 <div className="text-xs text-muted-foreground">Activos hoy</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-secondary">{details.weeklyProgress}%</div>
+                <div className="text-2xl font-bold text-primary">{details.weeklyProgress}%</div>
                 <div className="text-xs text-muted-foreground">Progreso</div>
               </div>
             </div>
@@ -368,7 +368,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
               className={'flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ' +
                 (selectedCategory === cat.value
                   ? 'bg-primary text-secondary'
-                  : 'bg-surface-secondary text-muted-foreground hover:bg-surface-secondary/80'
+                  : 'bg-primary/10 text-muted-foreground hover:bg-surface-secondary/80'
                 )}
             >
               <span>{cat.icon}</span>
