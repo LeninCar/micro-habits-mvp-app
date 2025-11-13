@@ -61,7 +61,7 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
       </div>
 
       {/* Progress Overview */}
-      <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-none">
+      <Card className="p-6 mb-6 bg-linear-to-br from-primary/10 to-secondary/10 border-none">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-foreground">Progreso de Hoy</h2>
           <span className="text-2xl font-bold text-primary">
@@ -193,18 +193,17 @@ export function MainDashboard({ habits, onToggleHabit, onAddHabit, onEditHabit }
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span className="capitalize">{habit.category}</span>
-                              <span>•</span>
-                              <span className="capitalize">{habit.frequency}</span>
+                            <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2">
+                                <span className="capitalize">{habit.category}</span>
+                                <span>•</span>
+                                <span className="capitalize">{habit.frequency}</span>
+                              </div>
                               {habit.reminderTime && (
-                                <>
-                                  <span>•</span>
-                                  <div className="flex items-center gap-1">
-                                    <Bell className="h-3 w-3" />
-                                    <span>{habit.reminderTime}</span>
-                                  </div>
-                                </>
+                                <div className="flex items-center gap-1">
+                                  <Bell className="h-3 w-3" />
+                                  <span>{habit.reminderTime}</span>
+                                </div>
                               )}
                             </div>
                           </div>
