@@ -131,7 +131,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
             Volver a grupos
           </Button>
 
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/30">
+          <Card className="p-6 bg-linear-to-br from-primary/10 to-secondary/10 border-primary/30">
             <h1 className="text-2xl font-bold text-foreground mb-2">{details.name}</h1>
             <p className="text-muted-foreground mb-4">{details.description}</p>
 
@@ -446,7 +446,7 @@ export function GroupView({ groups, onCreateGroup, onToggleGroupMembership, onTo
       {/* Actividad Reciente */}
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <MessageCircle className="h-6 w-6 text-secondary" />
+          <MessageCircle className="h-6 w-6 text-primary" />
           Actividad Reciente
         </h2>
         <div className="space-y-3">
