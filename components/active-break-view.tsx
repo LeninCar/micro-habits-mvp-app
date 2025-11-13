@@ -417,7 +417,7 @@ export function ActiveBreakView() {
       {!activeExercise ? (
         <>
           {/* Beneficios de tomar pausas */}
-          <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-none">
+          <Card className="p-6 mb-6 bg-linear-to-br from-primary/10 to-secondary/10 border-none">
             <h2 className="text-lg font-semibold text-foreground mb-3">¿Por qué tomar pausas?</h2>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
@@ -466,7 +466,7 @@ export function ActiveBreakView() {
               .map((exercise) => (
               <Card
                 key={exercise.id}
-                className={`p-5 cursor-pointer transition-all hover:shadow-md bg-gradient-to-br ${exercise.color}`}
+                className={`p-5 cursor-pointer transition-all hover:shadow-md bg-linear-to-br ${exercise.color}`}
                 onClick={() => startExercise(exercise.id)}
               >
                 <div className="flex items-center gap-4">
@@ -487,7 +487,7 @@ export function ActiveBreakView() {
       ) : (
         <div className="space-y-6">
           {/* Ejercicio actual con instrucciones paso a paso */}
-          <Card className={`p-8 text-center bg-gradient-to-br ${activeExerciseData?.color}`}>
+          <Card className={`p-8 text-center bg-linear-to-br ${activeExerciseData?.color}`}>
             <div className={`flex justify-center mb-4 ${activeExerciseData?.iconColor}`}>
               {activeExerciseData?.icon}
             </div>
