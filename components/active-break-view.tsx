@@ -449,7 +449,7 @@ export function ActiveBreakView() {
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     selectedCategory === cat
                       ? 'bg-primary text-secondary'
-                      : 'bg-primary/10 text-primary hover:bg-primary/20'
+                      : 'bg-primary/10 text-muted-foreground hover:bg-primary/20'
                   }`}
                   onClick={() => setSelectedCategory(cat)}
                 >

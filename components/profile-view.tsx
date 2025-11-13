@@ -292,12 +292,12 @@ export function ProfileView({ habits, groups }: ProfileViewProps) {
           <div className="text-xs text-muted-foreground">Completados</div>
         </Card>
         <Card className="p-4 text-center">
-          <Sparkles className="h-6 w-6 text-secondary mx-auto mb-2" />
+          <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
           <div className="text-2xl font-bold text-foreground">{longestStreak}</div>
           <div className="text-xs text-muted-foreground">Racha máxima</div>
         </Card>
         <Card className="p-4 text-center">
-          <Users className="h-6 w-6 text-accent mx-auto mb-2" />
+          <Users className="h-6 w-6 text-primary mx-auto mb-2" />
           <div className="text-2xl font-bold text-foreground">{joinedGroups}</div>
           <div className="text-xs text-muted-foreground">Grupos unidos</div>
         </Card>
